@@ -98,7 +98,7 @@ class PerceptronApp:
             max_iter = int(self.max_iterations.get())
             
             # Treinar o perceptron
-            weights, accuracies, values_test, classes_test = perceptron.perceptron(
+            weights, errors, values_test, classes_test = perceptron.perceptron(
                 class1, class2, alpha=alpha, max_iterations=max_iter)
             
             # Frame principal
@@ -112,8 +112,9 @@ class PerceptronApp:
             # Resultados do treinamento
             ttk.Label(info_frame, text=f"{class1.capitalize()} vs {class2.capitalize()}", 
                      font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=5)
-            ttk.Label(info_frame, text=f"Acurácia: {accuracies[-1]:.3f}", 
+            ttk.Label(info_frame, text=f"Erro final: {errors[-1]:.6f}", 
                      font=("Arial", 10)).pack(anchor="w", padx=10, pady=2)
+
             
             # Exibir pesos finais
             weight_values = [round(float(w), 3) for w in weights]
@@ -124,32 +125,33 @@ class PerceptronApp:
             graphs_frame = ttk.Frame(result_main)
             graphs_frame.pack(fill=tk.BOTH, expand=True, pady=10)
             
-            # Frame para o gráfico de acurácia
-            acc_frame = ttk.LabelFrame(graphs_frame, text="Acurácia por Epócas")
-            acc_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
+            # Frame para o gráfico de erro
+            err_frame = ttk.LabelFrame(graphs_frame, text="Erro por Época: E(w) = (1/2)*(r-wᵀx)²")
+            err_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
             
-            # Criar figura para acurácia
-            fig_acc = Figure(figsize=(6, 4))
-            ax_acc = fig_acc.add_subplot(111)
+            # Criar figura para o erro
+            fig_err = Figure(figsize=(6, 4))
+            ax_err = fig_err.add_subplot(111)
             
-            # Plotar acurácia
-            ax_acc.plot(range(len(accuracies)), accuracies, marker='.', linestyle='-', markersize=3)
-            ax_acc.set_xlabel("Epochs")
-            ax_acc.set_ylabel("Accuracy")
-            ax_acc.set_title(f"Acurácia por Época ({class1} vs {class2})")
-            ax_acc.set_xlim(0, len(accuracies)-1)
-            ax_acc.set_ylim(min(accuracies)-0.05 if min(accuracies) < 1.0 else 0.95, 1.05)
-            ax_acc.xaxis.set_major_locator(MaxNLocator(integer=True))
-            ax_acc.grid(True, linestyle='--', alpha=0.7)
+            # Plotar erro
+            ax_err.plot(range(len(errors)), errors, marker='.', linestyle='-', markersize=3, color='red')
+            ax_err.set_xlabel("Épocas")
+            ax_err.set_ylabel("Erro")
+            ax_err.set_title(f"Erro por Época ({class1} vs {class2})")
+            ax_err.set_xlim(0, len(errors)-1)
+            if len(errors) > 1:
+                ax_err.set_ylim(0, max(errors) * 1.1)
+            ax_err.xaxis.set_major_locator(MaxNLocator(integer=True))
+            ax_err.grid(True, linestyle='--', alpha=0.7)
             
-            # Adicionar canvas para acurácia
-            canvas_acc = FigureCanvasTkAgg(fig_acc, master=acc_frame)
-            canvas_acc.draw()
-            canvas_acc.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+            # Adicionar canvas para erro
+            canvas_err = FigureCanvasTkAgg(fig_err, master=err_frame)
+            canvas_err.draw()
+            canvas_err.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
             
             # Barra de ferramentas para o gráfico
-            toolbar_acc = NavigationToolbar2Tk(canvas_acc, acc_frame)
-            toolbar_acc.update()
+            toolbar_err = NavigationToolbar2Tk(canvas_err, err_frame)
+            toolbar_err.update()
             
             
         except Exception as e:

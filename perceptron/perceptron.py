@@ -1,7 +1,7 @@
 import data_loader
 import numpy as np
 
-def perceptron(classe1, classe2,alpha=0.01, max_iterations=100):
+def perceptron(classe1, classe2, alpha=0.01, max_iterations=100):
     values, classes = data_loader.join_classes(classe1, classe2)
 
     #separar treino e teste
@@ -15,15 +15,15 @@ def perceptron(classe1, classe2,alpha=0.01, max_iterations=100):
     values_test = values[test_idx]
     classes_test = classes[test_idx]
 
-
     #vetor peso
     weights = np.random.rand(values.shape[1])  
 
-
-    accuracies = []  
+    errors = []
     
     #iterar epocas
     for epoch in range(max_iterations):
+        epoch_errors = []
+        
         #iterar amostras
         for i in range(len(values_train)):
             sample = values_train[i]
@@ -33,19 +33,17 @@ def perceptron(classe1, classe2,alpha=0.01, max_iterations=100):
             #funçao ativaçao
             predicted_class = 1 if output >= 0 else -1
             
+            #erro E(w) = (1/2)*(r-w^Tx)²
+            error = 0.5 * (label - output)**2
+            epoch_errors.append(error)
+            
             if predicted_class != label:
                 #regra delta alpha(r - wt * x) * x
                 weights += alpha * (label - predicted_class) * sample
 
+        # Média dos erros da época
+        avg_error = np.mean(epoch_errors)
+        errors.append(avg_error)
 
-        correct = 0
-        for i in range(len(values_test)):
-            output = np.dot(weights, values_test[i])
-            prediction = 1 if output >= 0 else -1
-            if prediction == classes_test[i]:
-                correct += 1
 
-        accuracy = correct / len(values_test)
-        accuracies.append(accuracy)  
-
-    return weights, accuracies, values_test, classes_test
+    return weights, errors, values_test, classes_test

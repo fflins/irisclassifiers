@@ -1,4 +1,4 @@
-import data_loader
+import data_loader as data_loader
 import numpy as np
 
 def perceptron(classe1, classe2, alpha=0.01, max_iterations=100):
@@ -14,6 +14,7 @@ def perceptron(classe1, classe2, alpha=0.01, max_iterations=100):
     classes_train = classes[train_idx]
     values_test = values[test_idx]
     classes_test = classes[test_idx]
+    print("classes_test:", classes_test)
 
     #vetor peso
     weights = np.random.rand(values.shape[1])  

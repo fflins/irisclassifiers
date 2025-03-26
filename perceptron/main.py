@@ -8,6 +8,12 @@ import perceptron
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
 import numpy as np
+import data_loader
+import classifiers
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import evaluators
+import seaborn as sns
 
 class PerceptronApp:
     def __init__(self, root):
@@ -32,28 +38,9 @@ class PerceptronApp:
         # Frame para seleção do perceptron
         perceptron_frame = ttk.LabelFrame(control_frame, text="Perceptron")
         perceptron_frame.pack(fill=tk.X, padx=5, pady=5)
-        
-        # Botões do perceptron com descrições
-        ttk.Button(perceptron_frame, text="Setosa vs Versicolor", 
-                  command=lambda: self.show_results("setosa", "versicolor")).pack(fill=tk.X, pady=5, padx=5)
-        
-        ttk.Button(perceptron_frame, text="Setosa vs Virginica", 
-                  command=lambda: self.show_results("setosa", "virginica")).pack(fill=tk.X, pady=5, padx=5)
-        
-        
-        ttk.Button(perceptron_frame, text="Versicolor vs Virginica", 
-                  command=lambda: self.show_results("versicolor", "virginica")).pack(fill=tk.X, pady=5, padx=5)
-        
-        # Frame para visualização de dados
-        data_viz_frame = ttk.LabelFrame(control_frame, text="Data")
-        data_viz_frame.pack(fill=tk.X, padx=5, pady=10)
-        
-        ttk.Button(data_viz_frame, text="Exibir dados", 
-                  command=self.show_data_window).pack(fill=tk.X, pady=5, padx=5)
-        
-        
+
         #frame parametros
-        params_frame = ttk.LabelFrame(control_frame, text="Parâmetros")
+        params_frame = ttk.LabelFrame(perceptron_frame, text="Parâmetros")
         params_frame.pack(fill=tk.X, padx=5, pady=10)
         
         #frame alpha
@@ -70,6 +57,36 @@ class PerceptronApp:
         self.max_iterations = tk.StringVar(value="150")
         ttk.Entry(iter_frame, textvariable=self.max_iterations, width=8).pack(side=tk.RIGHT, padx=5)
         
+        # Botões do perceptron com descrições
+        ttk.Button(perceptron_frame, text="Setosa vs Versicolor", 
+                  command=lambda: self.show_results_perceptron("setosa", "versicolor")).pack(fill=tk.X, pady=5, padx=5)
+        
+        ttk.Button(perceptron_frame, text="Setosa vs Virginica", 
+                  command=lambda: self.show_results_perceptron("setosa", "virginica")).pack(fill=tk.X, pady=5, padx=5)
+        
+        
+        ttk.Button(perceptron_frame, text="Versicolor vs Virginica", 
+                  command=lambda: self.show_results_perceptron("versicolor", "virginica")).pack(fill=tk.X, pady=5, padx=5)
+        
+        # Frame para visualização de dados
+        data_viz_frame = ttk.LabelFrame(control_frame, text="Data")
+        data_viz_frame.pack(fill=tk.X, padx=5, pady=10)
+        
+        ttk.Button(data_viz_frame, text="Exibir dados", 
+                  command=self.show_data_window).pack(fill=tk.X, pady=5, padx=5)
+        
+
+        #Frame lineares
+        linear_classifiers_frame = ttk.LabelFrame(control_frame, text="Classificadores Lineares")
+        linear_classifiers_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        ttk.Button(linear_classifiers_frame, text="Distância Mínima", 
+                  command=lambda: self.show_results_linear("minimal")).pack(fill=tk.X, pady=5, padx=5)
+        
+        ttk.Button(linear_classifiers_frame, text="Distância Máxima", 
+                  command=lambda: self.show_results_linear("maximal")).pack(fill=tk.X, pady=5, padx=5)
+    
+        
         # ===== Frame direito para exibir resultados =====
         self.results_frame = ttk.LabelFrame(main_frame, text="Resultados")
         self.results_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -84,9 +101,12 @@ class PerceptronApp:
         # Aba para visualização de dados
         self.data_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.data_tab, text="Classes")
+
+        self.linear_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.linear_tab,text="Lineares")
         
         
-    def show_results(self, class1, class2):
+    def show_results_perceptron(self, class1, class2):
         try:
             self.clear_frame(self.perceptron_tab)
             self.notebook.pack(fill=tk.BOTH, expand=True)
@@ -101,6 +121,11 @@ class PerceptronApp:
             weights, errors, values_test, classes_test = perceptron.perceptron(
                 class1, class2, alpha=alpha, max_iterations=max_iter)
             
+            predictions = [class1 if np.dot(weights, sample) >= 0 else class2 for sample in values_test]
+
+            # Converter classes_test para 1 e -1
+            classes_test_str = [class1 if c == 1 else class2 for c in classes_test]
+
             # Frame principal
             result_main = ttk.Frame(self.perceptron_tab)
             result_main.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -108,7 +133,10 @@ class PerceptronApp:
             # Frame para informações
             info_frame = ttk.LabelFrame(result_main, text="Informações de treino")
             info_frame.pack(fill=tk.X, pady=5)
-            
+
+            # Botão "Avaliar"
+            ttk.Button(info_frame, text="Avaliar", 
+                  command=lambda: self.show_evaluation_popup(classes_test_str, predictions)).pack(anchor="w", padx=10, pady=2)
             # Resultados do treinamento
             ttk.Label(info_frame, text=f"{class1.capitalize()} vs {class2.capitalize()}", 
                      font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=5)
@@ -195,7 +223,7 @@ class PerceptronApp:
         # Frame para X
         x_frame = ttk.Frame(feature_frame)
         x_frame.pack(fill=tk.X, padx=5, pady=5)
-        ttk.Label(x_frame, text="X-axis:").pack(side=tk.LEFT)
+        ttk.Label(x_frame, text="X:").pack(side=tk.LEFT)
         x_combo = ttk.Combobox(x_frame, textvariable=self.feature_x, values=self.features, 
                               state="readonly", width=15)
         x_combo.pack(side=tk.RIGHT)
@@ -204,7 +232,7 @@ class PerceptronApp:
         # Frame para Y
         y_frame = ttk.Frame(feature_frame)
         y_frame.pack(fill=tk.X, padx=5, pady=5)
-        ttk.Label(y_frame, text="Y-axis:").pack(side=tk.LEFT)
+        ttk.Label(y_frame, text="Y:").pack(side=tk.LEFT)
         y_combo = ttk.Combobox(y_frame, textvariable=self.feature_y, values=self.features, 
                               state="readonly", width=15)
         y_combo.pack(side=tk.RIGHT)
@@ -261,9 +289,106 @@ class PerceptronApp:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {str(e)}")
     
+    def show_results_linear(self, classifier_type):
+        self.clear_frame(self.linear_tab)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
+        self.notebook.select(2)  # Seleciona a aba de lineares
+
+        # Obter dados de teste
+        data, training_sample, test_sample, setosasMean, versicolorMean, virginicaMean = data_loader.load_data()
+        test_data = test_sample.drop(columns="Species").values
+        test_labels = test_sample["Species"].values
+
+        # Frame principal
+        linear_main = ttk.Frame(self.linear_tab)
+        linear_main.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Frame para informações
+        info_frame = ttk.LabelFrame(linear_main, text="Resultados Lineares")
+        info_frame.pack(fill=tk.X, pady=5)
+
+        if classifier_type == "minimal":
+        # Classificador de distância mínima
+            predictions = [classifiers.distancia_minima(sample, setosasMean, versicolorMean, virginicaMean) for sample in test_data]
+            cm = confusion_matrix(test_labels, predictions)
+
+            # Calcular a acurácia sem usar accuracy_score
+            correct_predictions = sum(1 for true, pred in zip(test_labels, predictions) if true == pred)
+            accuracy = correct_predictions / len(test_labels)
+
+            ttk.Label(info_frame, text="Classificador de Distância Mínima:").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Acurácia: {accuracy:.4f}").pack(anchor="w", padx=10, pady=2)  # Exibir acurácia formatada
+            ttk.Button(info_frame, text="Avaliar", 
+                command=lambda: self.show_evaluation_popup(test_labels, predictions)).pack(anchor="w", padx=10, pady=2)
+        elif classifier_type == "maximal":
+            # Classificador de distância máxima
+            predictions = [classifiers.distancia_maxima(sample, setosasMean, versicolorMean, virginicaMean) for sample in test_data]
+            cm = confusion_matrix(test_labels, predictions)
+
+            # Calcular a acurácia sem usar accuracy_score
+            correct_predictions = sum(1 for true, pred in zip(test_labels, predictions) if true == pred)
+            accuracy = correct_predictions / len(test_labels)
+
+            ttk.Label(info_frame, text="Classificador de Distância Máxima:").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Acurácia: {accuracy:.4f}").pack(anchor="w", padx=10, pady=2)  # Exibir acurácia formatada
+            ttk.Button(info_frame, text="Avaliar", 
+                command=lambda: self.show_evaluation_popup(test_labels, predictions)).pack(anchor="w", padx=10, pady=2)
+
     
+    def show_evaluation_popup(self, expected, predictions):
+        popup = tk.Toplevel(self.root)
+        popup.title("Estatísticas de Avaliação")
+
+        # Frame para informações
+        info_frame = ttk.Frame(popup)
+        info_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        kappa_value = evaluators.kappa(expected, predictions)
+        kappa_var = evaluators.kappa_variance(expected, predictions)
+        tau_value = evaluators.tau(expected, predictions)
+        tau_var = evaluators.tau_variance(expected, predictions)
+        precision_values = evaluators.precision(expected, predictions)
+        recall_values = evaluators.recall(expected, predictions)
+
+        ttk.Label(info_frame, text=f"Kappa: {kappa_value:.4f}").pack(anchor="w", padx=10, pady=2)
+        ttk.Label(info_frame, text=f"Kappa Variance: {kappa_var:.4f}").pack(anchor="w", padx=10, pady=2)
+        ttk.Label(info_frame, text=f"Tau: {tau_value:.4f}").pack(anchor="w", padx=10, pady=2)
+        ttk.Label(info_frame, text=f"Tau Variance: {tau_var:.4f}").pack(anchor="w", padx=10, pady=2)
+        ttk.Label(info_frame, text=f"Precision: {[f'{p:.2f}' for p in precision_values]}").pack(anchor="w", padx=10, pady=2)
+        ttk.Label(info_frame, text=f"Recall: {[f'{r:.2f}' for r in recall_values]}").pack(anchor="w", padx=10, pady=2)
+
+        # Botão para exibir matriz de confusão
+        ttk.Button(info_frame, text="Matriz de Confusão", 
+                command=lambda: self.show_confusion_matrix_popup(expected, predictions)).pack(anchor="w", padx=10, pady=2)
+
+
+    def show_confusion_matrix_popup(self, expected, predictions):
+        popup = tk.Toplevel(self.root)
+        popup.title("Matriz de Confusão")
+
+        # Frame para a matriz de confusão
+        cm_frame = ttk.Frame(popup)
+        cm_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        cm = confusion_matrix(expected, predictions)
+        classes = np.unique(np.concatenate((expected, predictions)))
+
+        fig = Figure(figsize=(8, 6))
+        ax = fig.add_subplot(111)
+
+        # Transpor a matriz de confusão
+        sns.heatmap(cm.T, annot=True, fmt='d', cmap='Blues', ax=ax, xticklabels=classes, yticklabels=classes)
+
+        # Inverter os rótulos dos eixos
+        ax.set_xlabel('Valores Reais')
+        ax.set_ylabel('Previsões')
+        ax.set_title('Matriz de Confusão')
+
+        canvas = FigureCanvasTkAgg(fig, master=cm_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
     def clear_frame(self, frame):
-        """Limpa todos os widgets de um frame"""
         for widget in frame.winfo_children():
             widget.destroy()
 

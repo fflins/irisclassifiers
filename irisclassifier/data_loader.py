@@ -5,7 +5,7 @@ def load_data():
 
     data = pd.read_csv("../data.csv", decimal=",")  
       
-    training_sample = data.sample(frac=0.7, random_state=12)
+    training_sample = data.sample(frac=0.7, random_state=5)
     test_sample = data.drop(training_sample.index)
     
     training_size = len(training_sample)

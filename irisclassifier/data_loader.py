@@ -8,11 +8,6 @@ def load_data():
     training_sample = data.sample(frac=0.7, random_state=5)
     test_sample = data.drop(training_sample.index)
     
-    training_size = len(training_sample)
-    test_size = len(test_sample)
-    print(f"Training set size: {training_size}")
-    print(f"Test set size: {test_size}")
-    
     setosas = training_sample[training_sample["Species"] == "setosa"]
     versicolor = training_sample[training_sample["Species"] == "versicolor"]
     virginica = training_sample[training_sample["Species"] == "virginica"]
@@ -24,8 +19,8 @@ def load_data():
     setosasMean = setosasData.mean().values
     versicolorMean = versicolorData.mean().values
     virginicaMean = virginicaData.mean().values
-    
-    return data, training_sample, test_sample, setosasMean, versicolorMean, virginicaMean
+
+    return data, training_sample, test_sample, setosasData, versicolorData, virginicaData, setosasMean, versicolorMean, virginicaMean
 
 def join_classes(classe1, classe2):
     data = pd.read_csv("../data.csv", decimal=",")
@@ -35,3 +30,5 @@ def join_classes(classe1, classe2):
     values = np.hstack([values, np.ones((values.shape[0], 1))])
     
     return values, classes  
+
+load_data()

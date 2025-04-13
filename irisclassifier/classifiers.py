@@ -6,7 +6,6 @@ def distancia_euclidiana(x, y):
     return np.sqrt(np.sum((x - y) ** 2))
 
 def distancia_minima(sample, setosasMean, versicolorMean, virginicaMean):
-
     dist_setosa = distancia_euclidiana(sample, setosasMean)
     dist_versicolor = distancia_euclidiana(sample, versicolorMean)
     dist_virginica = distancia_euclidiana(sample, virginicaMean)
@@ -19,8 +18,7 @@ def distancia_minima(sample, setosasMean, versicolorMean, virginicaMean):
         return "versicolor"
 
 def funcao_decisao(vetor_caracteristica, vetor_media_classe):
-    return np.dot(np.transpose(vetor_media_classe), vetor_caracteristica) - \
-           np.dot(0.5 * np.transpose(vetor_media_classe), vetor_media_classe)
+    return np.dot(np.transpose(vetor_media_classe), vetor_caracteristica) - np.dot(0.5 * np.transpose(vetor_media_classe), vetor_media_classe)
 
 def distancia_maxima(sample, setosasMean, versicolorMean, virginicaMean):
     dist_setosa = funcao_decisao(sample, setosasMean)

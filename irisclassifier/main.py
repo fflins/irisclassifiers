@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import evaluators
 import seaborn as sns
 from scipy import stats
+import bayes
 
 class PerceptronApp:
     def __init__(self, root):
@@ -81,6 +82,9 @@ class PerceptronApp:
         linear_classifiers_frame = ttk.LabelFrame(control_frame, text="Classificadores Lineares")
         linear_classifiers_frame.pack(fill=tk.X, padx=5, pady=5)
         
+        ttk.Button(linear_classifiers_frame, text="Classificador de Bayes", 
+          command=lambda: self.show_results_bayes()).pack(fill=tk.X, pady=5, padx=5)
+
         ttk.Button(linear_classifiers_frame, text="Distância Mínima", 
                   command=lambda: self.show_results_linear("minimal")).pack(fill=tk.X, pady=5, padx=5)
         
@@ -476,6 +480,24 @@ class PerceptronApp:
                 messagebox.showerror("Erro","Variâncias não podem ser 0")
 
         ttk.Button(main_frame, text="Calcular Significância", command=calcular_e_exibir_significancia).grid(row=4, column=0, columnspan=4, pady=10)
+
+    #função para classificador de bayes
+    def show_results_bayes(self):
+        data, training_sample, test_sample, setosasData, versicolorData,virginicaData, setosasMean, versicolorMean, virginicaMean = data_loader.load_data()
+        test_data = test_sample.drop(columns="Species").values
+        test_labels = test_sample["Species"].values
+        print("test_labels:", test_labels)
+
+        cov_setosas = bayes.calculate_covariance_matrix(setosasData, setosasMean)
+        cov_versicolor = bayes.calculate_covariance_matrix(versicolorData, versicolorMean)
+        cov_virginica = bayes.calculate_covariance_matrix(virginicaData, virginicaMean)
+
+
+        # Classificador de Bayes Gaussiano
+        predictions = [bayes.predict_bayes(sample, cov_setosas, cov_versicolor, cov_virginica, setosasMean, versicolorMean, virginicaMean) for sample in test_data]
+        self.show_confusion_matrix_popup(test_labels, predictions)
+
+
 
     def clear_frame(self, frame):
         for widget in frame.winfo_children():

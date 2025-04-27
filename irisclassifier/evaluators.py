@@ -75,40 +75,28 @@ def tau_variance(expected, predictions):
 # calcula a precisão para cada classe
 def precision(expected, predictions):
     cm = confusion_matrix(expected, predictions)
-    precision_values = []
-    # itera sobre as classes
-    for i in range(len(cm)):
-        # calcula verdadeiros positivos e falsos positivos, sendo os verdadeiros da diagonal principal, e o resto da coluna falso
-        true_positives = cm[i, i]
-        false_positives = np.sum(cm[:, i]) - true_positives
-        # calcula a precisão
-        precision_values.append(true_positives / (true_positives + false_positives))
-    return precision_values
+    true_positives = cm[0, 0]  
+    false_positives = cm[0, 1] 
+    precision = true_positives / (true_positives + false_positives)
+    return precision
 
 # calcula a revocaçao para cada classe
 def recall(expected, predictions):
     cm = confusion_matrix(expected, predictions)
-    recall_values = []
-    # itera sobre as classes
-    for i in range(len(cm)):
-        # calcula verdadeiros positivos e falsos negativos, sendo os verdadeiros da diagonal principal, e o resto da linha falso
-        true_positives = cm[i, i]
-        false_negatives = np.sum(cm[i, :]) - true_positives
-
-        recall_values.append(true_positives / (true_positives + false_negatives))
-    return recall_values
+    true_positives = cm[0, 0]
+    false_negatives = cm[1, 0]
+    recall = true_positives / (true_positives + false_negatives)
+    return recall
 
 # calcula o f1-score para cada classe
 def f1_score(expected, predictions):
     # calcula a precisão e a revocação
-    precision_values = precision(expected, predictions)
-    recall_values = recall(expected, predictions)
-    f1_values = []
-    # itera sobre as classes
-    for i in range(len(precision_values)):
+    precision_ = precision(expected, predictions)
+    recall_ = recall(expected, predictions)
+ 
         # calcula o f1-score
-        f1_values.append(2 * (precision_values[i] * recall_values[i]) / (precision_values[i] + recall_values[i]))
-    return f1_values
+    f1_score = 2 * ((precision_ * recall_) / (precision_ + recall_))
+    return f1_score
 
 
 # calcula a acurácia aleatória

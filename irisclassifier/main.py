@@ -16,6 +16,7 @@ import evaluators
 import seaborn as sns
 from scipy import stats
 import bayes
+import utils
 
 class PerceptronApp:
     def __init__(self, root):
@@ -148,7 +149,12 @@ class PerceptronApp:
 
             # botão "Avaliar"
             ttk.Button(info_frame, text="Avaliar", 
-                  command=lambda: self.show_evaluation_popup(classes_test_str, predictions)).pack(anchor="w", padx=10, pady=2)
+                  command=lambda: self.show_evaluation_popup(classes_test_str, predictions,multi_class=False)).pack(anchor="w", padx=10, pady=2)
+            
+            #implementar
+           #ttk.Button(info_frame, text="Visualizar Superfície de Decisão", 
+           #command=lambda: utils.visualize_perceptron_decision_surface(self, weights, class1, class2)).pack(anchor="w", padx=10, pady=2)
+            
             # resultados do treinamento
             ttk.Label(info_frame, text=f"{class1.capitalize()} vs {class2.capitalize()}", 
                      font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=5)
@@ -318,7 +324,7 @@ class PerceptronApp:
         self.notebook.select(2)  
 
         # obtem dados de teste
-        data, training_sample, test_sample, setosasMean, versicolorMean, virginicaMean = data_loader.load_data()
+        data, training_sample, test_sample, setosasData, versicolorData, virginicaData, setosasMean, versicolorMean, virginicaMean = data_loader.load_data()
         test_data = test_sample.drop(columns="Species").values
         test_labels = test_sample["Species"].values
 
@@ -340,9 +346,13 @@ class PerceptronApp:
             accuracy = correct_predictions / len(test_labels)
 
             ttk.Label(info_frame, text="Classificador de Distância Mínima:").pack(anchor="w", padx=10, pady=2)
-            ttk.Label(info_frame, text=f"Acurácia: {accuracy:.4f}").pack(anchor="w", padx=10, pady=2)  
+            ttk.Label(info_frame, text=f"Acurácia: {accuracy:.4f}").pack(anchor="w", padx=10, pady=2) 
+
+            
+
+
             ttk.Button(info_frame, text="Avaliar", 
-                command=lambda: self.show_evaluation_popup(test_labels, predictions)).pack(anchor="w", padx=10, pady=2)
+                command=lambda: self.show_evaluation_popup(test_labels, predictions, multi_class = True)).pack(anchor="w", padx=10, pady=2)
             
 
         elif classifier_type == "maximal":
@@ -357,12 +367,14 @@ class PerceptronApp:
             ttk.Label(info_frame, text="Classificador de Distância Máxima:").pack(anchor="w", padx=10, pady=2)
             ttk.Label(info_frame, text=f"Acurácia: {accuracy:.4f}").pack(anchor="w", padx=10, pady=2)  # Exibir acurácia formatada
             ttk.Button(info_frame, text="Avaliar", 
-                command=lambda: self.show_evaluation_popup(test_labels, predictions)).pack(anchor="w", padx=10, pady=2)
+                command=lambda: self.show_evaluation_popup(test_labels, predictions, multi_class=True)).pack(anchor="w", padx=10, pady=2)
 
     
 
     #funçao para exibir coeficientes
-    def show_evaluation_popup(self, expected, predictions):
+    def show_evaluation_popup(self, expected, predictions, multi_class):
+
+        
         popup = tk.Toplevel(self.root)
         popup.title("Estatísticas de Avaliação")
 
@@ -370,60 +382,43 @@ class PerceptronApp:
         info_frame = ttk.Frame(popup)
         info_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-
+        if multi_class:
+            kappa_value = evaluators.kappa(expected, predictions)
+            kappa_var = evaluators.kappa_variance(expected, predictions)
+            tau_value = evaluators.tau(expected, predictions)
+            tau_var = evaluators.tau_variance(expected, predictions)
+            
+            ttk.Label(info_frame, text=f"Kappa: {kappa_value:.4f}").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Kappa Variance: {kappa_var:.4f}").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Tau: {tau_value:.4f}").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Tau Variance: {tau_var:.4f}").pack(anchor="w", padx=10, pady=2)
+            
+            ttk.Button(info_frame, text="Matriz de Confusão",
+                    command=lambda: utils.show_confusion_matrix_popup(self, expected, predictions)).pack(pady=5)
+        else:
         #calculos
-        kappa_value = evaluators.kappa(expected, predictions)
-        kappa_var = evaluators.kappa_variance(expected, predictions)
-        tau_value = evaluators.tau(expected, predictions)
-        tau_var = evaluators.tau_variance(expected, predictions)
-        precision_values = evaluators.precision(expected, predictions)
-        recall_values = evaluators.recall(expected, predictions)
-        f1_values = evaluators.f1_score(expected, predictions)  
+            kappa_value = evaluators.kappa(expected, predictions)
+            kappa_var = evaluators.kappa_variance(expected, predictions)
+            tau_value = evaluators.tau(expected, predictions)
+            tau_var = evaluators.tau_variance(expected, predictions)
+            precision = evaluators.precision(expected, predictions)
+            recall = evaluators.recall(expected, predictions)
+            f1 = evaluators.f1_score(expected, predictions)  
 
 
 
-        #exibir informações
-        ttk.Label(info_frame, text=f"Kappa: {kappa_value:.4f}").pack(anchor="w", padx=10, pady=2)
-        ttk.Label(info_frame, text=f"Kappa Variance: {kappa_var:.4f}").pack(anchor="w", padx=10, pady=2)
-        ttk.Label(info_frame, text=f"Tau: {tau_value:.4f}").pack(anchor="w", padx=10, pady=2)
-        ttk.Label(info_frame, text=f"Tau Variance: {tau_var:.4f}").pack(anchor="w", padx=10, pady=2)
-        ttk.Label(info_frame, text=f"Precision: {[f'{p:.2f}' for p in precision_values]}").pack(anchor="w", padx=10, pady=2)
-        ttk.Label(info_frame, text=f"Recall: {[f'{r:.2f}' for r in recall_values]}").pack(anchor="w", padx=10, pady=2)
-        ttk.Label(info_frame, text=f"F1-score: {[f'{f:.2f}' for f in f1_values]}").pack(anchor="w", padx=10, pady=2)  
+            #exibir informações
+            ttk.Label(info_frame, text=f"Kappa: {kappa_value:.4f}").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Kappa Variance: {kappa_var:.4f}").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Tau: {tau_value:.4f}").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Tau Variance: {tau_var:.4f}").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Precision: {precision:.2f}'").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"Recall: '{recall:.2f}' ").pack(anchor="w", padx=10, pady=2)
+            ttk.Label(info_frame, text=f"F1-score: '{f1:.2f}' ").pack(anchor="w", padx=10, pady=2)  
 
-        
-        ttk.Button(info_frame, text="Matriz de Confusão", 
-                  command=lambda: self.show_confusion_matrix_popup(expected, predictions)).pack(anchor="w", padx=10, pady=2)
-
-
-
-
-    #funcao pra exibir matriz de confusao
-    def show_confusion_matrix_popup(self, expected, predictions):
-        popup = tk.Toplevel(self.root)
-        popup.title("Matriz de Confusão")
-
-        # frame para a matriz de confusão
-        cm_frame = ttk.Frame(popup)
-        cm_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        cm = confusion_matrix(expected, predictions)
-        classes = np.unique(np.concatenate((expected, predictions)))
-
-        fig = Figure(figsize=(8, 6))
-        ax = fig.add_subplot(111)
-
-        # transpor a matriz de confusão pra ficar igual o slide
-        sns.heatmap(cm.T, annot=True, fmt='d', cmap='Blues', ax=ax, xticklabels=classes, yticklabels=classes)
-
-        # inverte os rótulos 
-        ax.set_xlabel('Valores Reais')
-        ax.set_ylabel('Previsões')
-        ax.set_title('Matriz de Confusão')
-
-        canvas = FigureCanvasTkAgg(fig, master=cm_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            
+            ttk.Button(info_frame, text="Matriz de Confusão", 
+                    command=lambda: utils.show_confusion_matrix_popup(self, expected, predictions)).pack(anchor="w", padx=10, pady=2)
 
 
 
@@ -483,10 +478,21 @@ class PerceptronApp:
 
     #função para classificador de bayes
     def show_results_bayes(self):
+        self.clear_frame(self.linear_tab)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
+        self.notebook.select(2)  
+
+        # frame principal
+        linear_main = ttk.Frame(self.linear_tab)
+        linear_main.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # frame para informações
+        info_frame = ttk.LabelFrame(linear_main, text="Resultados:")
+        info_frame.pack(fill=tk.X, pady=5)
+
         data, training_sample, test_sample, setosasData, versicolorData,virginicaData, setosasMean, versicolorMean, virginicaMean = data_loader.load_data()
         test_data = test_sample.drop(columns="Species").values
         test_labels = test_sample["Species"].values
-        print("test_labels:", test_labels)
 
         cov_setosas = bayes.calculate_covariance_matrix(setosasData, setosasMean)
         cov_versicolor = bayes.calculate_covariance_matrix(versicolorData, versicolorMean)
@@ -495,8 +501,72 @@ class PerceptronApp:
 
         # Classificador de Bayes Gaussiano
         predictions = [bayes.predict_bayes(sample, cov_setosas, cov_versicolor, cov_virginica, setosasMean, versicolorMean, virginicaMean) for sample in test_data]
-        self.show_confusion_matrix_popup(test_labels, predictions)
 
+        correct_predictions = sum(1 for true, pred in zip(test_labels, predictions) if true == pred)
+        accuracy = correct_predictions / len(test_labels)
+
+        ttk.Label(info_frame, text="Classificador de Bayes:").pack(anchor="w", padx=10, pady=2)
+        ttk.Label(info_frame, text=f"Acurácia: {accuracy:.4f}").pack(anchor="w", padx=10, pady=2)  
+        ttk.Button(info_frame, text="Avaliar", 
+                command=lambda: self.show_evaluation_popup(test_labels, predictions, multi_class=True)).pack(anchor="w", padx=10, pady=2)
+
+        decision_surface_frame = ttk.LabelFrame(linear_main, text="Equações de Superfície de Decisão:")
+        decision_surface_frame.pack(fill=tk.X, pady=5)
+    
+    # Função para exibir a equação de superfície de decisão em uma popup
+        def show_decision_surface(class1_name, class2_name, class1_cov, class2_cov, class1_mean, class2_mean):
+            popup = tk.Toplevel(self.root)
+            popup.title(f"Superfície de Decisão: {class1_name} vs {class2_name}")
+            popup.geometry("800x400")
+            
+            # Frame para conteúdo da popup
+            content_frame = ttk.Frame(popup, padding=10)
+            content_frame.pack(fill=tk.BOTH, expand=True)
+            
+            # Título
+            ttk.Label(content_frame, text=f"Superfície de Decisão entre {class1_name} e {class2_name}",
+                    font=("Arial", 12, "bold")).pack(pady=10)
+            
+            # Obter a equação usando a função implementada
+            try:
+                equation = bayes.print_decision_surface_equation(
+                    class1_cov, class2_cov, class1_mean, class2_mean)
+                
+                # Criar um widget de texto para mostrar a equação com formatação melhor
+                text_widget = tk.Text(content_frame, wrap=tk.WORD, height=15, width=80)
+                text_widget.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+                
+
+                text_widget.insert(tk.END, f"d({class1_name}) - d({class2_name}) = 0\n\n")
+                text_widget.insert(tk.END, "Equação simplificada:\n")
+                text_widget.insert(tk.END, f"{equation} = 0\n\n")
+                
+                
+                # Configurar o widget como somente leitura
+                text_widget.config(state=tk.DISABLED)
+                
+            except Exception as e:
+                ttk.Label(content_frame, text=f"Erro ao calcular a equação: {str(e)}",
+                        font=("Arial", 10)).pack(pady=10)
+            
+            # Botão de fechar
+            ttk.Button(content_frame, text="Fechar", command=popup.destroy).pack(pady=10)
+        
+        # Adicionar botões para as três combinações possíveis
+        ttk.Button(decision_surface_frame, text="Setosa vs Versicolor",
+                command=lambda: show_decision_surface("setosa", "versicolor", cov_setosas, cov_versicolor, setosasMean, versicolorMean)
+                ).pack(anchor="w", padx=10, pady=5)
+        
+        ttk.Button(decision_surface_frame, text="Setosa vs Virginica",
+                command=lambda: show_decision_surface("setosa", "virginica", cov_setosas, cov_virginica, setosasMean, virginicaMean)
+                ).pack(anchor="w", padx=10, pady=5)
+        
+        ttk.Button(decision_surface_frame, text="Versicolor vs Virginica",
+                command=lambda: show_decision_surface("versicolor", "virginica", cov_versicolor, cov_virginica, versicolorMean, virginicaMean)
+                ).pack(anchor="w", padx=10, pady=5)
+        
+
+    
 
 
     def clear_frame(self, frame):

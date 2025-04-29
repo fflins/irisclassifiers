@@ -62,26 +62,26 @@ def print_decision_surface_equation(class1_cov, class2_cov, class1_mean, class2_
     x1, x2, x3, x4 = sp.symbols('x1 x2 x3 x4')
     x = sp.Matrix([x1, x2, x3, x4])
     
-    # Converter médias para sympy
+    # converter médias para sympy
     mean1 = sp.Matrix(class1_mean.flatten())
     mean2 = sp.Matrix(class2_mean.flatten())
 
     print("mean1", mean1)
     print("mean2", mean2)
     
-    # Calcular determinantes e inversas
+    # calcular determinantes e inversas
     inv_cov1 = sp.Matrix(inverse_cov_matrix(class1_cov))
     inv_cov2 = sp.Matrix(inverse_cov_matrix(class2_cov))
     det_cov1 = np.linalg.det(class1_cov)
     det_cov2 = np.linalg.det(class2_cov)
     
-    # Calcular diferenças (x - μ)
+    # calcular diferenças (x - μ)
     diff1 = x - mean1
     print("diff1", diff1)
     diff2 = x - mean2
     print("diff2", diff2)
     
-    # Calcular as funções de decisão para cada classe
+    # calcular as funções de decisão para cada classe
     # d(x) = -0.5 * ln(det(Σ)) - 0.5 * (x - μ)^T * Σ^(-1) * (x - μ) + ln(P(ω))
     term1_class1 = -0.5 * sp.log(det_cov1)
     print("term1_class1", term1_class1)

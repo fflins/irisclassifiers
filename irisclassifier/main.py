@@ -17,6 +17,7 @@ import seaborn as sns
 from scipy import stats
 import bayes
 import utils
+from sample_classifier import SampleClassifierForm
 
 class PerceptronApp:
     def __init__(self, root):
@@ -102,6 +103,12 @@ class PerceptronApp:
         #frame teste de significancia
         ttk.Button(evaluation_frame, text="Testar significância", 
                   command=lambda: self.evaluate_significance()).pack(fill=tk.X, pady=5, padx=5)
+
+        sample_classifier_frame = ttk.LabelFrame(control_frame, text="Classificador")
+        sample_classifier_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        ttk.Button(sample_classifier_frame, text="Classificar nova amostra", 
+          command=self.open_sample_classifier).pack(fill=tk.X, pady=5, padx=5)
         
         # frame resultados
         self.results_frame = ttk.LabelFrame(main_frame, text="Resultados")
@@ -565,6 +572,10 @@ class PerceptronApp:
                 command=lambda: show_decision_surface("versicolor", "virginica", cov_versicolor, cov_virginica, versicolorMean, virginicaMean)
                 ).pack(anchor="w", padx=10, pady=5)
         
+
+    def open_sample_classifier(self):    
+        SampleClassifierForm(self.root, self)
+
 
     
 

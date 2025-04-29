@@ -1,21 +1,43 @@
 import pandas as pd
 import numpy as np
 
-def load_data():
+import pandas as pd
+import numpy as np
 
-    data = pd.read_csv("../data.csv", decimal=",")  
-      
-    training_sample = data.sample(frac=0.7, random_state=5)
-    test_sample = data.drop(training_sample.index)
+def load_data():
+    """
+    Carrega os dados e faz a divisão estratificada garantindo o mesmo número de amostras
+    de cada classe nos conjuntos de treino e teste.
+    """
+    data = pd.read_csv("../data.csv", decimal=",")
     
-    setosas = training_sample[training_sample["Species"] == "setosa"]
-    versicolor = training_sample[training_sample["Species"] == "versicolor"]
-    virginica = training_sample[training_sample["Species"] == "virginica"]
+    # separando os dados por classe
+    setosa = data[data["Species"] == "setosa"]
+    versicolor = data[data["Species"] == "versicolor"]
+    virginica = data[data["Species"] == "virginica"]
     
-    setosasData = setosas.drop(columns="Species")
-    versicolorData = versicolor.drop(columns="Species")
-    virginicaData = virginica.drop(columns="Species")
+    train_size = int(len(setosa) * 0.7)
     
+    # criando amostras de treinamento
+    setosa_train = setosa.sample(n=train_size, random_state=5)
+    versicolor_train = versicolor.sample(n=train_size, random_state=5)
+    virginica_train = virginica.sample(n=train_size, random_state=5)
+    
+    # criando amostras de teste 
+    setosa_test = setosa.drop(setosa_train.index)
+    versicolor_test = versicolor.drop(versicolor_train.index)
+    virginica_test = virginica.drop(virginica_train.index)
+    
+    # combinando amostras de treinamento e teste
+    training_sample = pd.concat([setosa_train, versicolor_train, virginica_train])
+    test_sample = pd.concat([setosa_test, versicolor_test, virginica_test])
+    
+    # separando dados por classe para cálculos de média
+    setosasData = setosa_train.drop(columns="Species")
+    versicolorData = versicolor_train.drop(columns="Species")
+    virginicaData = virginica_train.drop(columns="Species")
+    
+    # Calculando médias
     setosasMean = setosasData.mean().values
     versicolorMean = versicolorData.mean().values
     virginicaMean = virginicaData.mean().values

@@ -147,7 +147,7 @@ class SampleClassifierForm:
         sample_str = ", ".join([f"{feat}: {val:.2f}" for feat, val in zip(
             ['Sepal length', 'Sepal width', 'Petal length', 'Petal width'], sample)])
         
-        self.results_text.insert(tk.END, f"Sample: [{sample_str}]\n\n")
+        self.results_text.insert(tk.END, f"Amostra: [{sample_str}]\n\n")
         
         # Classify with minimum distance
         min_dist_result = self.classify_with_min_distance(sample)

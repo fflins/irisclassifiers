@@ -3,12 +3,35 @@ import numpy as np
 
 def perceptron(classe1, classe2, alpha=0.01, max_iterations=100):
     values, classes = data_loader.join_classes(classe1, classe2)
-
-    #separar treino e teste
+    
+    # separar os dados por classe
+    classe1_indices = np.where(classes == 1)[0]
+    classe2_indices = np.where(classes == -1)[0]
+    
+    # calcular o número de amostras para treinamento para cada classe (70%)
+    train_size_classe1 = int(len(classe1_indices) * 0.7)
+    train_size_classe2 = int(len(classe2_indices) * 0.7)
+    
+    # definir a semente para reprodutibilidade
     np.random.seed(50)
-    indices = np.random.permutation(len(values))
-    split = int(0.7 * len(values))
-    train_idx, test_idx = indices[:split], indices[split:]
+    
+    # embaralhar os índices de cada classe
+    np.random.shuffle(classe1_indices)
+    np.random.shuffle(classe2_indices)
+    
+    # dividir os índices em treino e teste para cada classe
+    classe1_train_idx = classe1_indices[:train_size_classe1]
+    classe1_test_idx = classe1_indices[train_size_classe1:]
+    
+    classe2_train_idx = classe2_indices[:train_size_classe2]
+    classe2_test_idx = classe2_indices[train_size_classe2:]
+    
+    # combinar os índices de treino e teste
+    train_idx = np.concatenate([classe1_train_idx, classe2_train_idx])
+    test_idx = np.concatenate([classe1_test_idx, classe2_test_idx])
+    
+    # embaralhar os índices de treino para não ter todas as amostras de uma classe seguidas
+    np.random.shuffle(train_idx)
     
     values_train = values[train_idx]
     classes_train = classes[train_idx]

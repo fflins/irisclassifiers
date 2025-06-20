@@ -4,7 +4,7 @@ import numpy as np
 
 def load_data():
     """Carrega e prepara os dados para os classificadores de mínima distância."""
-    data = pd.read_csv("../data.csv", decimal=",")
+    data = pd.read_csv("./data.csv", decimal=",")
     
     # separando os dados por classe
     setosa = data[data["Species"] == "setosa"]
@@ -38,7 +38,7 @@ def load_data():
 
 def load_perceptron_data(class1, class2, train_split=0.7, random_state=50):
 
-    data = pd.read_csv("../data.csv", decimal=",")
+    data = pd.read_csv("./data.csv", decimal=",")
     data_filtered = data[data["Species"].isin([class1, class2])]
     
     values = data_filtered.drop(columns=["Species"]).values

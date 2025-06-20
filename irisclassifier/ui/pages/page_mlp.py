@@ -1,0 +1,74 @@
+# ui/pages/page_mlp.py
+import tkinter as tk
+from tkinter import ttk, messagebox
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from logic.classifier_controller import run_mlp_training
+
+class MLPPage(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+        self.hidden_size = tk.IntVar(value=10)
+        self.epochs = tk.IntVar(value=10000)
+        self.learning_rate = tk.DoubleVar(value=0.1)
+        
+        control_frame = ttk.LabelFrame(self, text="Controles do MLP")
+        control_frame.pack(fill='x', padx=5, pady=5)
+        
+        top_row_frame = ttk.Frame(control_frame)
+        top_row_frame.pack(fill='x', pady=5)
+
+        ttk.Label(top_row_frame, text="Neurônios Ocultos:").pack(side='left', padx=5)
+        ttk.Entry(top_row_frame, textvariable=self.hidden_size, width=12).pack(side='left', padx=5)
+        
+        ttk.Label(top_row_frame, text="Épocas:").pack(side='left', padx=5)
+        ttk.Entry(top_row_frame, textvariable=self.epochs, width=12).pack(side='left', padx=5)
+
+        ttk.Label(top_row_frame, text="Taxa de Aprendizado:").pack(side='left', padx=5)
+        ttk.Entry(top_row_frame, textvariable=self.learning_rate, width=12).pack(side='left', padx=5)
+
+        ttk.Button(control_frame, text="Executar MLP", command=self.run_and_display).pack(pady=10)
+        
+        self.results_frame = ttk.Frame(self)
+        self.results_frame.pack(fill='both', expand=True, pady=10)
+
+    def clear_frame(self, frame):
+        for widget in frame.winfo_children():
+            widget.destroy()
+
+    def run_and_display(self):
+        self.clear_frame(self.results_frame)
+        hidden_size = self.hidden_size.get()
+        epochs = self.epochs.get()
+        learning_rate = self.learning_rate.get()
+
+        try:
+            results = run_mlp_training(hidden_size, epochs, learning_rate)
+            
+            info_text = (
+                f"Resultados do MLP:\n"
+                f"Neurônios Ocultos: {hidden_size}\n"
+                f"Épocas: {epochs}\n"
+                f"Taxa de Aprendizado: {learning_rate}\n"
+                f"Perda Final: {results['loss_history'][-1]:.6f}\n"
+                f"Acurácia: {results['accuracy']:.4f}"
+            )
+            ttk.Label(self.results_frame, text=info_text, justify='left').pack(anchor='w', padx=10)
+            
+            fig = Figure(figsize=(6, 4), dpi=100)
+            ax = fig.add_subplot(111)
+            ax.plot(results['loss_history'], 'b-')
+            ax.set_title("Perda por Época")
+            ax.set_xlabel("Épocas")
+            ax.set_ylabel("Perda (Entropia Cruzada)")
+            ax.grid(True)
+            
+            canvas = FigureCanvasTkAgg(fig, master=self.results_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill='both', expand=True, pady=10)
+
+        except Exception as e:
+            messagebox.showerror("Erro na Execução", str(e))

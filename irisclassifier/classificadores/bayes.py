@@ -2,21 +2,37 @@
 import numpy as np
 import sympy as sp
 
+
+def calculate_covariance_matrix(class_data):
+    return np.cov(class_data, rowvar=False, bias=True)
+
+'''
 def calculate_covariance_matrix(class_data, mean_vector):
     n = class_data.shape[0]
     cov_matrix = np.zeros((class_data.shape[1], class_data.shape[1]))
 
     mean_vector = mean_vector.reshape(-1, 1)
+    print("Vetor media: ", mean_vector)
     mean_vector_transposed = np.transpose(mean_vector)
-    
+    print("Vetor media transposto: ", mean_vector_transposed)
+
+    print("Média x transposta:", np.dot(mean_vector, mean_vector_transposed))
+
     for i in range(n):
+        print("Posição do vetor :", i)
         x = class_data.iloc[i, :].values.reshape(-1, 1)
+        print("Vetor :", x)
         x_transposed = np.transpose(x)
-        cov_matrix += np.dot(x,x_transposed) - np.dot(mean_vector, mean_vector_transposed)
+        print("Vetor transposto:", x_transposed)
+        print("Vetor x transposto: ", np.dot(x,x_transposed))
+        cov_matrix += np.dot(x,x_transposed) 
+        print("Matriz atual: ", cov_matrix)
     
     cov_matrix = cov_matrix / n
+    cov_matrix = cov_matrix - np.dot(mean_vector, mean_vector_transposed)
     
     return cov_matrix
+'''
 
 def inverse_cov_matrix(cov_matrix):
     try:
@@ -66,43 +82,53 @@ def print_decision_surface_equation(class1_cov, class2_cov, class1_mean, class2_
     mean1 = sp.Matrix(class1_mean.flatten())
     mean2 = sp.Matrix(class2_mean.flatten())
 
-    print("mean1", mean1)
-    print("mean2", mean2)
+    #print("mean1", mean1)
+    #print("mean2", mean2)
     
     # calcular determinantes e inversas
     inv_cov1 = sp.Matrix(inverse_cov_matrix(class1_cov))
+    #print("inv_cov1: ", inv_cov1)
     inv_cov2 = sp.Matrix(inverse_cov_matrix(class2_cov))
+    #print("inv_cov2: ", inv_cov2)
+
     det_cov1 = np.linalg.det(class1_cov)
     det_cov2 = np.linalg.det(class2_cov)
     
     # calcular diferenças (x - μ)
     diff1 = x - mean1
-    print("diff1", diff1)
+    #print("diff1", diff1)
     diff2 = x - mean2
-    print("diff2", diff2)
+    #print("diff2", diff2)
     
     # calcular as funções de decisão para cada classe
     # d(x) = -0.5 * ln(det(Σ)) - 0.5 * (x - μ)^T * Σ^(-1) * (x - μ) + ln(P(ω))
     term1_class1 = -0.5 * sp.log(det_cov1)
-    print("term1_class1", term1_class1)
+    #print("term1_class1", term1_class1)
     term2_class1 = -0.5 * (diff1.T * inv_cov1 * diff1)[0]
-    print("term2_class1", term2_class1)
+    #print("term2_class1", term2_class1)
     term3_class1 = sp.log(1/3) 
-    print("term3_class1", term3_class1)
+    #print("term3_class1", term3_class1)
     d_class1 = term1_class1 + term2_class1 + term3_class1
-    
+    #print("Equação de decisão classe 1: ", d_class1)
+    #print("Equação simplificada 1: ", sp.simplify(d_class1))
+
+
     term1_class2 = -0.5 * sp.log(det_cov2)
+    #print("term1_class2", term1_class2)
     term2_class2 = -0.5 * (diff2.T * inv_cov2 * diff2)[0]
+    #print("term2_class2", term2_class2)
     term3_class2 = sp.log(1/3)  
+    #print("term3_class2", term3_class2)
     d_class2 = term1_class2 + term2_class2 + term3_class2
+    #("Equação de decisão classe 2: ", d_class2)
+    #print("Equação simplificada 2: ", sp.simplify(d_class2))
     
     # superfície de decisão é dada por d(classe1) - d(classe2) = 0
     decision_surface = d_class1 - d_class2
-    print("decision_surface", decision_surface)
-    
+    #print("decision_surface", decision_surface)
     # Simplificar a equação resultante
     simplified_eq = sp.simplify(decision_surface)
-    print("simplified_eq", simplified_eq)
+    #print("simplified_eq", simplified_eq)
     
     # arredondar coeficientes para 2 casas decimais
     # primeiro, transformar para string para manipulação
@@ -118,7 +144,6 @@ def print_decision_surface_equation(class1_cov, class2_cov, class1_mean, class2_
     # padrão para encontrar números na equação (inclusive decimais e negativos)
     pattern = r'-?\d+\.\d+'
     rounded_eq_str = re.sub(pattern, round_numbers_in_eq, eq_str)
-    
-    
-    
+    #print("Rounded squared eq: ", rounded_eq_str)
+
     return rounded_eq_str

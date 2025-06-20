@@ -72,33 +72,6 @@ def tau_variance(expected, predictions):
     tau_variance = tau_variance / (total_samples)
     return tau_variance
 
-# calcula a precisão para cada classe
-def precision(expected, predictions):
-    cm = confusion_matrix(expected, predictions)
-    true_positives = cm[0, 0]  
-    false_positives = cm[0, 1] 
-    precision = true_positives / (true_positives + false_positives)
-    return precision
-
-# calcula a revocaçao para cada classe
-def recall(expected, predictions):
-    cm = confusion_matrix(expected, predictions)
-    true_positives = cm[0, 0]
-    false_negatives = cm[1, 0]
-    recall = true_positives / (true_positives + false_negatives)
-    return recall
-
-# calcula o f1-score para cada classe
-def f1_score(expected, predictions):
-    # calcula a precisão e a revocação
-    precision_ = precision(expected, predictions)
-    recall_ = recall(expected, predictions)
- 
-        # calcula o f1-score
-    f1_score = 2 * ((precision_ * recall_) / (precision_ + recall_))
-    return f1_score
-
-
 # calcula a acurácia aleatória
 def random_accuracy(total_samples, confusion_matrix):
     cm = confusion_matrix
@@ -112,3 +85,8 @@ def random_accuracy(total_samples, confusion_matrix):
         aux += row_sum * col_sum
     # calcula a acurácia aleatória
     return aux / (total_samples ** 2)
+
+from sklearn.metrics import classification_report
+
+def calcular_scores(expected, predictions):
+    return classification_report(expected, predictions, target_names=['setosa', 'versicolor', 'virginica'])

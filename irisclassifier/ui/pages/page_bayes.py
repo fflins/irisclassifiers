@@ -1,0 +1,78 @@
+# ui/pages/page_bayes.py
+import tkinter as tk
+from tkinter import ttk, messagebox, scrolledtext
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+from logic.classifier_controller import run_bayes_classifier
+
+class BayesPage(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        
+        control_frame = ttk.LabelFrame(self, text="Controles do Classificador Bayesiano")
+        control_frame.pack(fill='x', padx=5, pady=5)
+        
+        ttk.Button(control_frame, text="Executar Classificador Bayesiano", 
+                  command=self.run_and_display).pack(pady=10)
+        
+        self.results_frame = ttk.Frame(self)
+        self.results_frame.pack(fill='both', expand=True, pady=10)
+        
+        self.notebook = ttk.Notebook(self.results_frame)
+        self.notebook.pack(fill='both', expand=True)
+
+    def clear_notebook(self):
+        for tab in self.notebook.tabs():
+            self.notebook.forget(tab)
+
+    def run_and_display(self):
+        self.clear_notebook()
+        
+        try:
+            results = run_bayes_classifier()
+            
+            results_tab = ttk.Frame(self.notebook)
+            self.notebook.add(results_tab, text="Resultados")
+            
+            info_text = (
+                f"Classificador: Bayesiano (QDA)\n"
+                f"Acurácia: {results['accuracy']:.4f}\n"
+                f"Total de Amostras: {len(results['predictions'])}"
+            )
+            ttk.Label(results_tab, text=info_text, justify='left').pack(anchor='w', padx=10, pady=5)
+            
+            cm = confusion_matrix(results['true_labels'], results['predictions'])
+            
+            fig = Figure(figsize=(8, 6), dpi=100)
+            ax = fig.add_subplot(111)
+            
+            classes = ['setosa', 'versicolor', 'virginica']
+            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                       xticklabels=classes, yticklabels=classes, ax=ax)
+            ax.set_title('Matriz de Confusão - Classificador Bayesiano')
+            ax.set_xlabel('Predito')
+            ax.set_ylabel('Real')
+            
+            canvas = FigureCanvasTkAgg(fig, master=results_tab)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill='both', expand=True, pady=10)
+            
+            surfaces_tab = ttk.Frame(self.notebook)
+            self.notebook.add(surfaces_tab, text="Superfícies de Decisão")
+            
+            surfaces_text = scrolledtext.ScrolledText(surfaces_tab, wrap=tk.WORD, height=20)
+            surfaces_text.pack(fill='both', expand=True, padx=10, pady=10)
+            
+            surfaces_content = "Equações das Superfícies de Decisão:\n\n"
+            for pair, equation in results['decision_surfaces'].items():
+                surfaces_content += f"{pair}:\n{equation}\n\n"
+            
+            surfaces_text.insert(tk.END, surfaces_content)
+            surfaces_text.config(state=tk.DISABLED)
+
+        except Exception as e:
+            messagebox.showerror("Erro na Execução", str(e))

@@ -4,19 +4,22 @@ from tkinter import ttk, messagebox
 import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from data_loader import get_resource_path # <-- 1. Importe a função auxiliar
 
 class DataViewerPage(ttk.Frame):
-    def __init__(self, parent, app_controller=None): # app_controller é opcional aqui
+    def __init__(self, parent, app_controller=None):
         super().__init__(parent)
         
         # Carrega os dados uma vez para obter os nomes das colunas e classes
         try:
-            self.data = pd.read_csv("data.csv", decimal=",")
+            # <-- 2. Use a função para obter o caminho correto
+            path_to_data = get_resource_path("data.csv")
+            self.data = pd.read_csv(path_to_data, decimal=",")
         except FileNotFoundError:
-            messagebox.showerror("Erro", "Arquivo data.csv não encontrado no diretório raiz.")
+            messagebox.showerror("Erro", "Arquivo data.csv não encontrado. Verifique se ele está incluído no executável.")
             return
 
-        self.features = list(self.data.columns[:-1]) # Todas as colunas exceto a última
+        self.features = list(self.data.columns[:-1])
         self.species = list(self.data['Species'].unique())
 
         self.species_vars = {name: tk.BooleanVar(value=True) for name in self.species}
@@ -26,37 +29,31 @@ class DataViewerPage(ttk.Frame):
         self.setup_widgets()
         self.update_plot()
 
+    # O resto do seu código (setup_widgets, update_plot) continua exatamente igual...
     def setup_widgets(self):
         options_frame = ttk.LabelFrame(self, text="Opções de Visualização")
         options_frame.pack(fill='x', padx=10, pady=5)
-
-        # Frame para selecionar espécies
         species_frame = ttk.Frame(options_frame)
         species_frame.pack(side='left', padx=10, pady=5)
         for name, var in self.species_vars.items():
             ttk.Checkbutton(species_frame, text=name.capitalize(), variable=var, 
                             command=self.update_plot).pack(anchor='w')
-
-        # Frame para seleção de características
         feature_frame = ttk.Frame(options_frame)
         feature_frame.pack(side='left', padx=20, pady=5)
         ttk.Label(feature_frame, text="Eixo X:").grid(row=0, column=0, sticky='w')
         x_combo = ttk.Combobox(feature_frame, textvariable=self.feature_x, values=self.features, state="readonly")
         x_combo.grid(row=0, column=1, padx=5, pady=2)
         x_combo.bind("<<ComboboxSelected>>", lambda e: self.update_plot())
-
         ttk.Label(feature_frame, text="Eixo Y:").grid(row=1, column=0, sticky='w')
         y_combo = ttk.Combobox(feature_frame, textvariable=self.feature_y, values=self.features, state="readonly")
         y_combo.grid(row=1, column=1, padx=5, pady=2)
         y_combo.bind("<<ComboboxSelected>>", lambda e: self.update_plot())
-        
         self.plot_frame = ttk.Frame(self)
         self.plot_frame.pack(fill='both', expand=True, padx=10, pady=10)
 
     def update_plot(self):
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
-
         selected_species = [name for name, var in self.species_vars.items() if var.get()]
         if not selected_species: return
         

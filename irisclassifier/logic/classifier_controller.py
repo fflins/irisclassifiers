@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from itertools import combinations
 
 # Importando seus módulos de classificadores
-from classificadores import lineares, bayes, perceptron, mlp, rbm
+from classificadores import lineares, bayes, perceptron, mlp, rbm, kmeans
 # Importando seu data_loader
 import data_loader
 
@@ -161,20 +161,19 @@ def run_mlp_training(hidden_size=10, epochs=10000, learning_rate=0.1):
         "accuracy": accuracy
     }
 
-def run_rbm_training(num_hidden=10, epochs=200, learning_rate=0.1):
+def run_rbm_training(num_hidden=20, epochs=300, learning_rate=0.001):
     """
-    Executa o treinamento não supervisionado da RBM.
+    Executa o treinamento da RBM Gaussiana-Bernoulli.
     """
     iris = load_iris()
-    X, y = iris.data, iris.target
+    X, y_true = iris.data, iris.target
 
-    # 1. Normalizar dados para o intervalo [0, 1]
-    X_scaled = MinMaxScaler().fit_transform(X)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    # 2. Treinamento
-    num_visible = X_scaled.shape[1]
-    model = rbm.RBM(num_visible, num_hidden)
-    reconstruction_errors = model.train(X_scaled, epochs, learning_rate)
+    # 2. Instanciar e treinar o novo modelo
+    model = rbm.RBM(num_visible=X_scaled.shape[1], num_hidden=num_hidden)
+    reconstruction_errors = model.train(X_scaled, epochs=epochs, learning_rate=learning_rate, batch_size=16)
 
     # 3. Extrair características aprendidas
     learned_features = model.transform(X_scaled)
@@ -183,5 +182,31 @@ def run_rbm_training(num_hidden=10, epochs=200, learning_rate=0.1):
         "model": model,
         "reconstruction_errors": reconstruction_errors,
         "learned_features": learned_features,
-        "original_labels": y # Para visualização colorida
+        "original_labels": y_true, # Para a visualização
+        "scaled_data": X_scaled # Para a visualização
+    }
+
+def run_kmeans_clustering(k=3, max_iters=100):
+    """
+    Executa o algoritmo K-Means no dataset Iris.
+    """
+    iris = load_iris()
+    X = iris.data
+    y_true = iris.target # Rótulos verdadeiros, usados APENAS para avaliação final
+
+    # 1. Normalizar os dados é crucial para algoritmos baseados em distância
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    # 2. Instanciar e treinar o modelo K-Means
+    model = kmeans.KMeans(k=k, max_iters=max_iters)
+    model.fit(X_scaled)
+
+
+    return {
+        "scaled_data": X_scaled,
+        "true_labels": y_true,
+        "cluster_labels": model.labels_,
+        "centroids": model.centroids,
+        "k": k
     }

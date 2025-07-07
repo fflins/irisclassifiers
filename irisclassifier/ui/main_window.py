@@ -4,6 +4,17 @@ from tkinter import ttk
 from .pages.control_panel import ControlPanel
 from .results_notebook import ResultsNotebook
 
+from .results_notebook import ResultsNotebook
+from .pages.page_linear import LinearPage
+from .pages.page_bayes import BayesPage
+from .pages.page_perceptron import PerceptronPage
+from .pages.page_mlp import MLPPage
+from .pages.page_rbm import RBMPage
+from .pages.page_kmeans import KMeansPage
+from .pages.page_data_viewer import DataViewerPage
+from .pages.page_sample_classifier import SampleClassifierPage
+from logic.significance_test_window import SignificanceTestWindow
+
 class MainApplication:
     def __init__(self, root):
         self.root = root
@@ -35,33 +46,28 @@ class MainApplication:
         self.results_notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
     def run_perceptron(self):
-        from .pages.page_perceptron import PerceptronPage
         self.results_notebook.add_page(PerceptronPage, "Perceptron")
         
     def run_linear(self):
-        from .pages.page_linear import LinearPage
         self.results_notebook.add_page(LinearPage, "Classificadores Lineares")
         
     def run_bayes(self):
-        from .pages.page_bayes import BayesPage
         self.results_notebook.add_page(BayesPage, "Classificador Bayesiano")
 
     def run_mlp(self):
-        from .pages.page_mlp import MLPPage
         self.results_notebook.add_page(MLPPage, "MLP (Rede Neural)")
 
     def run_rbm(self):
-        from .pages.page_rbm import RBMPage
         self.results_notebook.add_page(RBMPage, "RBM (Análise de Features)")
 
+    def run_kmeans(self):
+        self.results_notebook.add_page(KMeansPage, "K-Means Clustering")
+
     def show_data_viewer(self):
-        from .pages.page_data_viewer import DataViewerPage
         self.results_notebook.add_page(DataViewerPage, "Visualizador de Dados")
 
     def open_significance_test(self):
-        from logic.significance_test_window import SignificanceTestWindow
-        SignificanceTestWindow(self.root) # Abre a popup
+        SignificanceTestWindow(self.root) 
 
     def show_sample_classifier(self):
-        from .pages.page_sample_classifier import SampleClassifierPage
         self.results_notebook.add_page(SampleClassifierPage, "Classificar Amostra")

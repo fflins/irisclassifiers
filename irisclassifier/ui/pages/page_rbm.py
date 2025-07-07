@@ -12,8 +12,8 @@ class RBMPage(ttk.Frame):
         super().__init__(parent)
         
         self.num_hidden = tk.IntVar(value=10)
-        self.epochs = tk.IntVar(value=200)
-        self.learning_rate = tk.DoubleVar(value=0.1)
+        self.epochs = tk.IntVar(value=1000)
+        self.learning_rate = tk.DoubleVar(value=0.001)
         
         control_frame = ttk.LabelFrame(self, text="Controles da RBM")
         control_frame.pack(fill='x', padx=5, pady=5)

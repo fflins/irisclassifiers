@@ -36,6 +36,12 @@ class ControlPanel(ttk.Frame):
         
         ttk.Button(neural_frame, text="Máquina de Boltzmann Restrita",
                    command=self.app.run_rbm).pack(fill=tk.X, pady=5, padx=5)
+        
+        cluster_frame = ttk.LabelFrame(self, text="Clusterização")
+        cluster_frame.pack(fill=tk.X, padx=5, pady=5, anchor="n")
+
+        kmeans_button = ttk.Button(cluster_frame, text="K-Means", command=self.app.run_kmeans)
+        kmeans_button.pack(fill='x', padx=5, pady=5)
 
         evaluation_frame = ttk.LabelFrame(self, text="Avaliação")
         evaluation_frame.pack(fill=tk.X, padx=5, pady=5, anchor="n")
